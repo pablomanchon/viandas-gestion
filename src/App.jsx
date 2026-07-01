@@ -23,7 +23,100 @@ function hoyLocal() {
   return toLocalDateInput(Date.now())
 }
 
-function ComandaForm({ onAdd }) {
+function PencilIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className="h-4 w-4"
+    >
+      <path d="M17.414 2.586a2 2 0 0 0-2.828 0L13 4.172 15.828 7l1.586-1.586a2 2 0 0 0 0-2.828Z" />
+      <path d="M12 5.586 3 14.586V17.5a.5.5 0 0 0 .5.5H6.5L15.5 8l-3.5-2.414Z" />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className="h-4 w-4"
+    >
+      <path
+        fillRule="evenodd"
+        d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className="h-5 w-5"
+    >
+      <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+    </svg>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className="h-5 w-5"
+    >
+      <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+    </svg>
+  )
+}
+
+function Modal({ onClose, children }) {
+  useEffect(() => {
+    function handleKey(e) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+      <div className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ToastContainer({ toasts }) {
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white shadow-lg"
+        >
+          {t.mensaje}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ComandaForm({ onAdd, onClose }) {
   const [nombre, setNombre] = useState('')
   const [apellido, setApellido] = useState('')
   const [plato, setPlato] = useState('')
@@ -43,10 +136,7 @@ function ComandaForm({ onAdd }) {
       creadoEn: Date.now(),
     })
 
-    setNombre('')
-    setApellido('')
-    setPlato('')
-    setDetalle('')
+    onClose()
   }
 
   return (
@@ -54,6 +144,18 @@ function ComandaForm({ onAdd }) {
       onSubmit={handleSubmit}
       className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2"
     >
+      <div className="flex items-center justify-between sm:col-span-2">
+        <h2 className="text-lg font-semibold text-slate-900">Nueva comanda</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        >
+          <CloseIcon />
+        </button>
+      </div>
+
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">
           Nombre
@@ -112,26 +214,12 @@ function ComandaForm({ onAdd }) {
       <div className="sm:col-span-2">
         <button
           type="submit"
-          className="w-full rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-700 sm:w-auto"
+          className="w-full rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-700"
         >
           Agregar comanda
         </button>
       </div>
     </form>
-  )
-}
-
-function PencilIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className="h-4 w-4"
-    >
-      <path d="M17.414 2.586a2 2 0 0 0-2.828 0L13 4.172 15.828 7l1.586-1.586a2 2 0 0 0 0-2.828Z" />
-      <path d="M12 5.586 3 14.586V17.5a.5.5 0 0 0 .5.5H6.5L15.5 8l-3.5-2.414Z" />
-    </svg>
   )
 }
 
@@ -237,14 +325,24 @@ function ComandaRow({ comanda, onToggle, onDelete, onUpdate }) {
           <p className="truncate font-semibold text-slate-900">
             {comanda.nombre} {comanda.apellido}
           </p>
-          <button
-            type="button"
-            onClick={empezarEdicion}
-            aria-label="Editar comanda"
-            className="shrink-0 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-          >
-            <PencilIcon />
-          </button>
+          <div className="flex shrink-0 gap-1">
+            <button
+              type="button"
+              onClick={empezarEdicion}
+              aria-label="Editar comanda"
+              className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              <PencilIcon />
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              aria-label="Eliminar comanda"
+              className="rounded-lg p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+            >
+              <TrashIcon />
+            </button>
+          </div>
         </div>
         <p className="truncate text-sm text-slate-700">{comanda.plato}</p>
         {comanda.detalle && (
@@ -272,13 +370,6 @@ function ComandaRow({ comanda, onToggle, onDelete, onUpdate }) {
         >
           {comanda.entregado ? 'Marcar pendiente' : 'Marcar entregado'}
         </button>
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
-        >
-          Eliminar
-        </button>
       </div>
     </li>
   )
@@ -289,29 +380,53 @@ function App() {
   const [filtro, setFiltro] = useState('todas')
   const [busqueda, setBusqueda] = useState('')
   const [fechaFiltro, setFechaFiltro] = useState(hoyLocal())
+  const [modalAbierto, setModalAbierto] = useState(false)
+  const [toasts, setToasts] = useState([])
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(comandas))
   }, [comandas])
 
+  function notificar(mensaje) {
+    const id = crypto.randomUUID()
+    setToasts((prev) => [...prev, { id, mensaje }])
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id))
+    }, 3000)
+  }
+
   function addComanda(comanda) {
     setComandas((prev) => [comanda, ...prev])
+    notificar(`Comanda de ${comanda.nombre} ${comanda.apellido} creada`)
   }
 
   function toggleEntregado(id) {
+    const comanda = comandas.find((c) => c.id === id)
     setComandas((prev) =>
       prev.map((c) => (c.id === id ? { ...c, entregado: !c.entregado } : c))
     )
+    if (comanda) {
+      notificar(
+        `${comanda.nombre} ${comanda.apellido} marcado como ${
+          comanda.entregado ? 'pendiente' : 'entregado'
+        }`
+      )
+    }
   }
 
   function deleteComanda(id) {
+    const comanda = comandas.find((c) => c.id === id)
     setComandas((prev) => prev.filter((c) => c.id !== id))
+    if (comanda) {
+      notificar(`Comanda de ${comanda.nombre} ${comanda.apellido} eliminada`)
+    }
   }
 
   function updateComanda(id, cambios) {
     setComandas((prev) =>
       prev.map((c) => (c.id === id ? { ...c, ...cambios } : c))
     )
+    notificar(`Comanda de ${cambios.nombre} ${cambios.apellido} actualizada`)
   }
 
   const comandasFiltradas = comandas.filter((c) => {
@@ -329,23 +444,40 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-8">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">
-            Gestión de Comandas de Viandas
-          </h1>
-          <p className="mt-1 text-slate-500">
-            {comandas.length} comanda{comandas.length !== 1 && 's'} en total ·{' '}
-            {pendientes} pendiente{pendientes !== 1 && 's'}
-          </p>
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">
+              Gestión de Comandas de Viandas
+            </h1>
+            <p className="mt-1 text-slate-500">
+              {comandas.length} comanda{comandas.length !== 1 && 's'} en total ·{' '}
+              {pendientes} pendiente{pendientes !== 1 && 's'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setModalAbierto(true)}
+            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-700"
+          >
+            <PlusIcon />
+            Crear comanda
+          </button>
         </header>
 
-        <ComandaForm onAdd={addComanda} />
+        {modalAbierto && (
+          <Modal onClose={() => setModalAbierto(false)}>
+            <ComandaForm
+              onAdd={addComanda}
+              onClose={() => setModalAbierto(false)}
+            />
+          </Modal>
+        )}
 
         <input
           type="text"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          className="mt-6 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
           placeholder="Buscar por nombre o apellido..."
         />
 
@@ -419,6 +551,8 @@ function App() {
           </ul>
         )}
       </div>
+
+      <ToastContainer toasts={toasts} />
     </div>
   )
 }
