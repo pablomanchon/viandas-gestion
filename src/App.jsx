@@ -23,6 +23,20 @@ function hoyLocal() {
   return toLocalDateInput(Date.now())
 }
 
+function toLocalDatetimeInput(timestamp) {
+  const d = new Date(timestamp)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+function fromLocalDatetimeInput(value) {
+  return new Date(value).getTime()
+}
+
 function PencilIcon() {
   return (
     <svg
@@ -121,10 +135,13 @@ function ComandaForm({ onAdd, onClose }) {
   const [apellido, setApellido] = useState('')
   const [plato, setPlato] = useState('')
   const [detalle, setDetalle] = useState('')
+  const [fechaHora, setFechaHora] = useState(() =>
+    toLocalDatetimeInput(Date.now())
+  )
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (!nombre.trim() || !apellido.trim() || !plato.trim()) return
+    if (!nombre.trim() || !apellido.trim() || !plato.trim() || !fechaHora) return
 
     onAdd({
       id: crypto.randomUUID(),
@@ -133,7 +150,7 @@ function ComandaForm({ onAdd, onClose }) {
       plato: plato.trim(),
       detalle: detalle.trim(),
       entregado: false,
-      creadoEn: Date.now(),
+      creadoEn: fromLocalDatetimeInput(fechaHora),
     })
 
     onClose()
@@ -211,6 +228,19 @@ function ComandaForm({ onAdd, onClose }) {
         />
       </div>
 
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Fecha y hora
+        </label>
+        <input
+          type="datetime-local"
+          value={fechaHora}
+          onChange={(e) => setFechaHora(e.target.value)}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          required
+        />
+      </div>
+
       <div className="sm:col-span-2">
         <button
           type="submit"
@@ -229,6 +259,9 @@ function ComandaRow({ comanda, onToggle, onDelete, onUpdate }) {
   const [apellido, setApellido] = useState(comanda.apellido)
   const [plato, setPlato] = useState(comanda.plato)
   const [detalle, setDetalle] = useState(comanda.detalle)
+  const [fechaHora, setFechaHora] = useState(() =>
+    toLocalDatetimeInput(comanda.creadoEn)
+  )
 
   function handleDelete() {
     const confirmado = window.confirm(
@@ -242,17 +275,19 @@ function ComandaRow({ comanda, onToggle, onDelete, onUpdate }) {
     setApellido(comanda.apellido)
     setPlato(comanda.plato)
     setDetalle(comanda.detalle)
+    setFechaHora(toLocalDatetimeInput(comanda.creadoEn))
     setEditando(true)
   }
 
   function guardarEdicion(e) {
     e.preventDefault()
-    if (!nombre.trim() || !apellido.trim() || !plato.trim()) return
+    if (!nombre.trim() || !apellido.trim() || !plato.trim() || !fechaHora) return
     onUpdate(comanda.id, {
       nombre: nombre.trim(),
       apellido: apellido.trim(),
       plato: plato.trim(),
       detalle: detalle.trim(),
+      creadoEn: fromLocalDatetimeInput(fechaHora),
     })
     setEditando(false)
   }
@@ -291,6 +326,13 @@ function ComandaRow({ comanda, onToggle, onDelete, onUpdate }) {
             onChange={(e) => setDetalle(e.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
             placeholder="Detalle"
+          />
+          <input
+            type="datetime-local"
+            value={fechaHora}
+            onChange={(e) => setFechaHora(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            required
           />
           <div className="flex gap-2">
             <button
@@ -349,7 +391,11 @@ function ComandaRow({ comanda, onToggle, onDelete, onUpdate }) {
           <p className="truncate text-sm text-slate-500">{comanda.detalle}</p>
         )}
         <p className="truncate text-xs text-slate-400">
-          {new Date(comanda.creadoEn).toLocaleDateString('es-AR')}
+          {new Date(comanda.creadoEn).toLocaleDateString('es-AR')}{' '}
+          {new Date(comanda.creadoEn).toLocaleTimeString('es-AR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </p>
       </div>
 
