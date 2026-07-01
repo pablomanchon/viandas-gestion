@@ -11,6 +11,18 @@ function loadComandas() {
   }
 }
 
+function toLocalDateInput(timestamp) {
+  const d = new Date(timestamp)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function hoyLocal() {
+  return toLocalDateInput(Date.now())
+}
+
 function ComandaForm({ onAdd }) {
   const [nombre, setNombre] = useState('')
   const [apellido, setApellido] = useState('')
@@ -110,6 +122,13 @@ function ComandaForm({ onAdd }) {
 }
 
 function ComandaRow({ comanda, onToggle, onDelete }) {
+  function handleDelete() {
+    const confirmado = window.confirm(
+      `¿Seguro que querés eliminar la comanda de ${comanda.nombre} ${comanda.apellido}?`
+    )
+    if (confirmado) onDelete(comanda.id)
+  }
+
   return (
     <li
       className={`flex flex-col gap-3 rounded-xl border p-4 shadow-sm transition sm:flex-row sm:items-center sm:justify-between ${
@@ -126,6 +145,9 @@ function ComandaRow({ comanda, onToggle, onDelete }) {
         {comanda.detalle && (
           <p className="truncate text-sm text-slate-500">{comanda.detalle}</p>
         )}
+        <p className="truncate text-xs text-slate-400">
+          {new Date(comanda.creadoEn).toLocaleDateString('es-AR')}
+        </p>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
@@ -147,7 +169,7 @@ function ComandaRow({ comanda, onToggle, onDelete }) {
         </button>
         <button
           type="button"
-          onClick={() => onDelete(comanda.id)}
+          onClick={handleDelete}
           className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
         >
           Eliminar
@@ -161,6 +183,7 @@ function App() {
   const [comandas, setComandas] = useState(loadComandas)
   const [filtro, setFiltro] = useState('todas')
   const [busqueda, setBusqueda] = useState('')
+  const [fechaFiltro, setFechaFiltro] = useState(hoyLocal())
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(comandas))
@@ -183,6 +206,8 @@ function App() {
   const comandasFiltradas = comandas.filter((c) => {
     if (filtro === 'pendientes' && c.entregado) return false
     if (filtro === 'entregadas' && !c.entregado) return false
+
+    if (fechaFiltro && toLocalDateInput(c.creadoEn) !== fechaFiltro) return false
 
     const nombreCompleto = `${c.nombre} ${c.apellido}`.toLowerCase()
     return nombreCompleto.includes(busqueda.trim().toLowerCase())
@@ -212,6 +237,37 @@ function App() {
           className="mt-6 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
           placeholder="Buscar por nombre o apellido..."
         />
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={fechaFiltro}
+            onChange={(e) => setFechaFiltro(e.target.value)}
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          />
+          <button
+            type="button"
+            onClick={() => setFechaFiltro(hoyLocal())}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              fechaFiltro === hoyLocal()
+                ? 'bg-slate-900 text-white'
+                : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            Hoy
+          </button>
+          <button
+            type="button"
+            onClick={() => setFechaFiltro('')}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              fechaFiltro === ''
+                ? 'bg-slate-900 text-white'
+                : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            Todas las fechas
+          </button>
+        </div>
 
         <div className="mt-3 mb-3 flex gap-2">
           {[
