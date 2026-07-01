@@ -160,6 +160,7 @@ function ComandaRow({ comanda, onToggle, onDelete }) {
 function App() {
   const [comandas, setComandas] = useState(loadComandas)
   const [filtro, setFiltro] = useState('todas')
+  const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(comandas))
@@ -180,9 +181,11 @@ function App() {
   }
 
   const comandasFiltradas = comandas.filter((c) => {
-    if (filtro === 'pendientes') return !c.entregado
-    if (filtro === 'entregadas') return c.entregado
-    return true
+    if (filtro === 'pendientes' && c.entregado) return false
+    if (filtro === 'entregadas' && !c.entregado) return false
+
+    const nombreCompleto = `${c.nombre} ${c.apellido}`.toLowerCase()
+    return nombreCompleto.includes(busqueda.trim().toLowerCase())
   })
 
   const pendientes = comandas.filter((c) => !c.entregado).length
@@ -202,7 +205,15 @@ function App() {
 
         <ComandaForm onAdd={addComanda} />
 
-        <div className="mt-6 mb-3 flex gap-2">
+        <input
+          type="text"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="mt-6 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+          placeholder="Buscar por nombre o apellido..."
+        />
+
+        <div className="mt-3 mb-3 flex gap-2">
           {[
             { key: 'todas', label: 'Todas' },
             { key: 'pendientes', label: 'Pendientes' },
