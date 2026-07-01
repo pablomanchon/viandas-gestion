@@ -121,7 +121,27 @@ function ComandaForm({ onAdd }) {
   )
 }
 
-function ComandaRow({ comanda, onToggle, onDelete }) {
+function PencilIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className="h-4 w-4"
+    >
+      <path d="M17.414 2.586a2 2 0 0 0-2.828 0L13 4.172 15.828 7l1.586-1.586a2 2 0 0 0 0-2.828Z" />
+      <path d="M12 5.586 3 14.586V17.5a.5.5 0 0 0 .5.5H6.5L15.5 8l-3.5-2.414Z" />
+    </svg>
+  )
+}
+
+function ComandaRow({ comanda, onToggle, onDelete, onUpdate }) {
+  const [editando, setEditando] = useState(false)
+  const [nombre, setNombre] = useState(comanda.nombre)
+  const [apellido, setApellido] = useState(comanda.apellido)
+  const [plato, setPlato] = useState(comanda.plato)
+  const [detalle, setDetalle] = useState(comanda.detalle)
+
   function handleDelete() {
     const confirmado = window.confirm(
       `¿Seguro que querés eliminar la comanda de ${comanda.nombre} ${comanda.apellido}?`
@@ -129,18 +149,103 @@ function ComandaRow({ comanda, onToggle, onDelete }) {
     if (confirmado) onDelete(comanda.id)
   }
 
+  function empezarEdicion() {
+    setNombre(comanda.nombre)
+    setApellido(comanda.apellido)
+    setPlato(comanda.plato)
+    setDetalle(comanda.detalle)
+    setEditando(true)
+  }
+
+  function guardarEdicion(e) {
+    e.preventDefault()
+    if (!nombre.trim() || !apellido.trim() || !plato.trim()) return
+    onUpdate(comanda.id, {
+      nombre: nombre.trim(),
+      apellido: apellido.trim(),
+      plato: plato.trim(),
+      detalle: detalle.trim(),
+    })
+    setEditando(false)
+  }
+
+  if (editando) {
+    return (
+      <li className="flex flex-col gap-3 rounded-xl border border-emerald-300 bg-white p-4 shadow-sm">
+        <form onSubmit={guardarEdicion} className="flex flex-col gap-2">
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            placeholder="Nombre"
+            required
+          />
+          <input
+            type="text"
+            value={apellido}
+            onChange={(e) => setApellido(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            placeholder="Apellido"
+            required
+          />
+          <input
+            type="text"
+            value={plato}
+            onChange={(e) => setPlato(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            placeholder="Plato"
+            required
+          />
+          <input
+            type="text"
+            value={detalle}
+            onChange={(e) => setDetalle(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            placeholder="Detalle"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="flex-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700"
+            >
+              Guardar
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditando(false)}
+              className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </li>
+    )
+  }
+
   return (
     <li
-      className={`flex flex-col gap-3 rounded-xl border p-4 shadow-sm transition sm:flex-row sm:items-center sm:justify-between ${
+      className={`flex flex-col gap-3 rounded-xl border p-4 shadow-sm transition ${
         comanda.entregado
           ? 'border-emerald-200 bg-emerald-50'
           : 'border-slate-200 bg-white'
       }`}
     >
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-slate-900">
-          {comanda.nombre} {comanda.apellido}
-        </p>
+      <div className="min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <p className="truncate font-semibold text-slate-900">
+            {comanda.nombre} {comanda.apellido}
+          </p>
+          <button
+            type="button"
+            onClick={empezarEdicion}
+            aria-label="Editar comanda"
+            className="shrink-0 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            <PencilIcon />
+          </button>
+        </div>
         <p className="truncate text-sm text-slate-700">{comanda.plato}</p>
         {comanda.detalle && (
           <p className="truncate text-sm text-slate-500">{comanda.detalle}</p>
@@ -150,7 +255,7 @@ function ComandaRow({ comanda, onToggle, onDelete }) {
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${
             comanda.entregado
@@ -203,6 +308,12 @@ function App() {
     setComandas((prev) => prev.filter((c) => c.id !== id))
   }
 
+  function updateComanda(id, cambios) {
+    setComandas((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...cambios } : c))
+    )
+  }
+
   const comandasFiltradas = comandas.filter((c) => {
     if (filtro === 'pendientes' && c.entregado) return false
     if (filtro === 'entregadas' && !c.entregado) return false
@@ -217,7 +328,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-3xl px-4 py-8">
+      <div className="mx-auto max-w-5xl px-4 py-8">
         <header className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900">
             Gestión de Comandas de Viandas
@@ -295,13 +406,14 @@ function App() {
             No hay comandas para mostrar.
           </p>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {comandasFiltradas.map((comanda) => (
               <ComandaRow
                 key={comanda.id}
                 comanda={comanda}
                 onToggle={toggleEntregado}
                 onDelete={deleteComanda}
+                onUpdate={updateComanda}
               />
             ))}
           </ul>
